@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew list *)",
+      "Bash(brew install *)",
+      "Bash(kill 31435)",
+      "Bash(rm -rf /usr/local/Cellar/gh)",
+      "Bash(rm -f /usr/local/var/homebrew/locks/gh)",
+      "Read(//usr/local/var/homebrew/locks/**)",
+      "Read(//private/tmp/**)"
+    ]
+  }
+}

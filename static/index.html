@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SIB MSME RM Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0e1a;--panel:#111827;--card:#1a2236;--border:#1e2d4a;
+  --accent:#1e88e5;--accent2:#00bcd4;--gold:#f59e0b;
+  --danger:#ef4444;--success:#10b981;--warn:#f59e0b;
+  --text:#e2e8f0;--muted:#64748b;--subtle:#94a3b8;
+  --sib:#003087;--sib2:#c8102e;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── GRID BG ── */
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(30,136,229,0.12),transparent),
+  linear-gradient(rgba(30,136,229,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(30,136,229,0.025) 1px,transparent 1px);
+  background-size:100% 100%,40px 40px,40px 40px;pointer-events:none;z-index:0}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+#auth-screen::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(30,136,229,0.15),transparent);
+  pointer-events:none}
+.auth-box{width:100%;max-width:420px;position:relative;z-index:1}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo .bank-name{font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.auth-logo .app-name{font-size:2.2rem;font-weight:800;margin-top:6px}
+.auth-logo .app-name span{color:var(--accent)}
+.auth-logo .tagline{font-size:.85rem;color:var(--muted);margin-top:4px}
+.auth-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;
+  padding:10px 14px;font-size:.83rem;color:var(--danger);margin-bottom:14px;display:none}
+
+/* ── SIDEBAR ── */
+#sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--panel);
+  border-right:1px solid var(--border);z-index:100;display:none;flex-direction:column;
+  transition:transform .3s}
+.sib-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.sib-logo .bank-name{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.sib-logo .app-name{font-size:1.1rem;font-weight:800;color:var(--text)}
+.sib-logo .app-name span{color:var(--accent)}
+.sib-logo .rm-name{font-size:.78rem;color:var(--text);margin-top:6px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sib-logo .rm-mobile{font-size:.68rem;color:var(--muted);margin-top:1px}
+nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-section{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);padding:14px 16px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;
+  font-size:.875rem;font-weight:500;color:var(--subtle);transition:all .15s;
+  border-left:3px solid transparent;margin:1px 0}
+.nav-item:hover{color:var(--text);background:rgba(30,136,229,.07);border-left-color:rgba(30,136,229,.3)}
+.nav-item.active{color:var(--accent);background:rgba(30,136,229,.12);border-left-color:var(--accent);font-weight:600}
+.nav-icon{font-size:1rem;width:20px;text-align:center}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}
+
+/* ── MAIN ── */
+#main{margin-left:220px;min-height:100vh;position:relative;z-index:1;display:none}
+.page{display:none;padding:28px 32px 60px;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:1.4rem;font-weight:800;letter-spacing:-.02em}
+.page-title small{font-size:.75rem;font-weight:400;color:var(--muted);display:block;margin-top:2px;letter-spacing:0}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+  border-radius:50%;opacity:.08}
+.stat-card.blue::before{background:var(--accent)}
+.stat-card.cyan::before{background:var(--accent2)}
+.stat-card.gold::before{background:var(--gold)}
+.stat-card.red::before{background:var(--danger)}
+.stat-card.green::before{background:var(--success)}
+.stat-label{font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:1.6rem;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-.02em}
+.stat-value.blue{color:var(--accent)}
+.stat-value.cyan{color:var(--accent2)}
+.stat-value.gold{color:var(--gold)}
+.stat-value.red{color:var(--danger)}
+.stat-value.green{color:var(--success)}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:4px}
+
+/* ── ALERT CARDS ── */
+.alert-section{margin-bottom:24px}
+.alert-title{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-item{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;display:flex;align-items:center;gap:12px;font-size:.85rem}
+.alert-item.warn{border-left:3px solid var(--warn)}
+.alert-item.danger{border-left:3px solid var(--danger)}
+.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.alert-info{flex:1}
+.alert-name{font-weight:600}
+.alert-detail{font-size:.75rem;color:var(--muted)}
+.alert-date{font-size:.75rem;font-family:'JetBrains Mono',monospace;color:var(--warn);font-weight:600}
+
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:9px;cursor:pointer;font-family:'Outfit',sans-serif;
+  font-weight:600;font-size:.85rem;padding:9px 18px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#1976d2;transform:translateY(-1px);box-shadow:0 4px 16px rgba(30,136,229,.35)}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#059669}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--subtle)}
+.btn-outline:hover{border-color:var(--accent);color:var(--text)}
+.btn-gold{background:var(--gold);color:#000}
+.btn-gold:hover{background:#d97706}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-xs{padding:4px 9px;font-size:.72rem}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+input,select,textarea{background:var(--panel);border:1px solid var(--border);border-radius:9px;
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:10px 14px;
+  outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,136,229,.15)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+input[type="file"]{padding:8px 14px;cursor:pointer}
+input:disabled{opacity:.6;cursor:not-allowed}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+textarea{resize:vertical;min-height:80px}
+.form-section{margin-bottom:24px}
+.form-section-title{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{background:var(--panel);padding:11px 14px;text-align:left;font-size:.68rem;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid rgba(30,42,54,.6);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(30,136,229,.04)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:.8rem}
+
+/* ── BADGES ── */
+.badge{display:inline-block;border-radius:6px;font-size:.68rem;font-weight:700;
+  letter-spacing:.05em;padding:3px 8px;text-transform:uppercase;white-space:nowrap}
+.badge-blue{background:rgba(30,136,229,.15);color:#60a5fa}
+.badge-cyan{background:rgba(0,188,212,.15);color:#22d3ee}
+.badge-gold{background:rgba(245,158,11,.15);color:#fbbf24}
+.badge-red{background:rgba(239,68,68,.15);color:#f87171}
+.badge-green{background:rgba(16,185,129,.15);color:#34d399}
+.badge-purple{background:rgba(139,92,246,.15);color:#a78bfa}
+.badge-gray{background:rgba(100,116,139,.15);color:#94a3b8}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:18px;
+  width:100%;max-width:800px;max-height:90vh;overflow-y:auto;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-header{padding:22px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;
+  background:var(--panel);z-index:1;border-radius:18px 18px 0 0}
+.modal-title{font-size:1.1rem;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.3rem;
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{background:rgba(239,68,68,.15);color:var(--danger)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.search-input{background:var(--panel);border:1px solid var(--border);border-radius:9px;
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:.88rem;padding:9px 14px;
+  outline:none;min-width:220px;transition:border-color .2s}
+.search-input:focus{border-color:var(--accent)}
+
+/* ── DYNAMIC FIELDS ── */
+.dynamic-list{display:flex;flex-direction:column;gap:8px}
+.dynamic-row{display:flex;gap:8px;align-items:center}
+.dynamic-row input,select{flex:1}
+.remove-btn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--danger);
+  border-radius:7px;cursor:pointer;font-size:.8rem;padding:6px 10px;transition:all .15s;flex-shrink:0}
+.remove-btn:hover{background:rgba(239,68,68,.2)}
+.add-row-btn{background:rgba(30,136,229,.1);border:1px dashed rgba(30,136,229,.4);color:var(--accent);
+  border-radius:8px;cursor:pointer;font-size:.8rem;padding:8px 14px;transition:all .15s;margin-top:4px;display:inline-flex;align-items:center;gap:6px}
+.add-row-btn:hover{background:rgba(30,136,229,.2)}
+
+/* ── STATUS PILLS ── */
+.status-pill{display:inline-block;border-radius:20px;font-size:.7rem;font-weight:700;padding:4px 10px;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── TARGET PROGRESS ── */
+.progress-wrap{margin-top:8px}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;right:28px;background:var(--card);border:1px solid var(--border);
+  border-left:3px solid var(--accent);border-radius:10px;color:var(--text);font-size:.85rem;
+  padding:13px 18px;box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(16px);
+  opacity:0;transition:all .3s;z-index:9998;pointer-events:none;max-width:320px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-left-color:var(--success)}
+#toast.error{border-left-color:var(--danger)}
+
+/* ── REPORT BOX ── */
+.report-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:20px;font-family:'JetBrains Mono',monospace;font-size:.82rem;white-space:pre-wrap;
+  line-height:1.7;color:var(--text)}
+
+/* ── SECTION DIVIDER ── */
+.section-divider{display:flex;align-items:center;gap:12px;margin:28px 0 20px}
+.section-divider-line{flex:1;height:1px;background:var(--border)}
+.section-divider-text{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ── CSV UPLOAD AREA ── */
+.csv-drop-area{background:rgba(30,136,229,.05);border:2px dashed rgba(30,136,229,.3);border-radius:12px;
+  padding:24px;text-align:center;margin-bottom:16px}
+.csv-drop-area p{font-size:.85rem;color:var(--muted);margin-bottom:12px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .page{padding:20px 16px 60px}
+}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:12px;opacity:.5}
+.empty-text{font-size:.9rem}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ AUTH SCREEN ══════════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="bank-name">South Indian Bank</div>
+      <div class="app-name">MSME <span>RM</span></div>
+      <div class="tagline">Relationship Manager Tracker</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form" class="card">
+      <div class="form-section-title" style="margin-bottom:18px">Sign In to Your Account</div>
+      <div id="login-error" class="auth-error"></div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email"/>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••"
+               autocomplete="current-password" onkeypress="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="doLogin()">Sign In →</button>
+      <div style="text-align:center;margin-top:16px;font-size:.85rem;color:var(--muted)">
+        New user? <a href="#" onclick="toggleAuthMode('register');return false" style="color:var(--accent);font-weight:600">Create account</a>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form" class="card" style="display:none">
+      <div class="form-section-title" style="margin-bottom:18px">Create Your RM Account</div>
+      <div id="register-error" class="auth-error"></div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="reg-name" placeholder="Your full name" autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" id="reg-mobile" placeholder="9876543210" autocomplete="tel"/>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Email Address *</label>
+        <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email"/>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Password * (min 6 characters)</label>
+        <input type="password" id="reg-password" placeholder="••••••••"
+               autocomplete="new-password" onkeypress="if(event.key==='Enter')doRegister()"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="doRegister()">Create Account →</button>
+      <div style="text-align:center;margin-top:16px;font-size:.85rem;color:var(--muted)">
+        Already registered? <a href="#" onclick="toggleAuthMode('login');return false" style="color:var(--accent);font-weight:600">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sib-logo">
+    <div class="bank-name">South Indian Bank</div>
+    <div class="app-name">MSME <span>RM</span></div>
+    <div class="rm-name" id="rm-name-display">Relationship Manager</div>
+    <div class="rm-mobile" id="rm-mobile-display"></div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="showPage('portfolio',this)"><span class="nav-icon">👥</span>Portfolio</div>
+    <div class="nav-item" onclick="showPage('bpm',this)"><span class="nav-icon">⚙️</span>BPM Tracking</div>
+    <div class="nav-section">Management</div>
+    <div class="nav-item" onclick="showPage('targets',this)"><span class="nav-icon">🎯</span>Target Tracking</div>
+    <div class="nav-item" onclick="showPage('book',this)"><span class="nav-icon">📒</span>Book Entry</div>
+    <div class="nav-item" onclick="showPage('branches',this)"><span class="nav-icon">🏦</span>Branches</div>
+    <div class="nav-section">Reports & Account</div>
+    <div class="nav-item" onclick="showPage('reports',this)"><span class="nav-icon">📋</span>Reports</div>
+    <div class="nav-item" onclick="showPage('profile',this)"><span class="nav-icon">👤</span>Profile</div>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center" onclick="doLogout()">⏏ Sign Out</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div class="page-title">Dashboard <small>Portfolio overview & alerts</small></div>
+    <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+  </div>
+  <div class="stat-grid" id="dash-stats"></div>
+
+  <div class="card" style="margin-bottom:20px" id="dash-targets-card">
+    <div class="form-section-title">🎯 Target Progress</div>
+    <div id="dash-targets-content" style="color:var(--muted);font-size:.85rem">Loading...</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" id="dash-alerts-grid">
+    <div class="card">
+      <div class="alert-title" style="color:var(--warn)">⚠️ Limits Expiring (60 days)</div>
+      <div class="alert-list" id="dash-exp-limits"></div>
+    </div>
+    <div class="card">
+      <div class="alert-title" style="color:var(--danger)">🔔 Insurance Alerts (30 days)</div>
+      <div class="alert-list" id="dash-exp-ins"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PORTFOLIO ══════════ -->
+<div class="page" id="page-portfolio">
+  <div class="page-header">
+    <div class="page-title">Portfolio <small>MSME customer accounts</small></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline btn-sm" onclick="openCsvModal()">📥 Upload CSV</button>
+      <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <input class="search-input" id="cust-search" placeholder="🔍 Search by name / account / customer ID..." oninput="loadCustomers()"/>
+    <select id="cust-branch-filter" onchange="loadCustomers()" style="width:160px">
+      <option value="">All Branches</option>
+    </select>
+    <select id="cust-nature-filter" onchange="loadCustomers()" style="width:160px">
+      <option value="">All Types</option>
+      <option value="termloan">Term Loan</option>
+      <option value="ccol">CCOL</option>
+      <option value="overdraft">Overdraft</option>
+      <option value="others">Others</option>
+    </select>
+    <span id="cust-count" style="font-size:.8rem;color:var(--muted);margin-left:auto"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Customer Name</th><th>Account No.</th><th>Branch</th>
+        <th>Type</th><th>Limit (₹)</th><th>Outstanding (₹)</th>
+        <th>ROI%</th><th>Insurance</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="cust-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ BPM TRACKING ══════════ -->
+<div class="page" id="page-bpm">
+  <div class="page-header">
+    <div class="page-title">BPM Tracking <small>Loan processing pipeline</small></div>
+    <button class="btn btn-primary" onclick="openBpmModal()">+ Add BPM Item</button>
+  </div>
+  <div class="filter-bar">
+    <select id="bpm-status-filter" onchange="loadBpm()" style="width:180px">
+      <option value="">All Status</option>
+      <option value="logged_in">Logged In</option>
+      <option value="dealing_officer">With Dealing Officer</option>
+      <option value="query_raised">Query Raised</option>
+      <option value="sanctioned">Sanctioned</option>
+      <option value="disbursed">Disbursed</option>
+      <option value="rejected">Rejected</option>
+      <option value="complete">Complete</option>
+    </select>
+    <select id="bpm-nature-filter" onchange="loadBpm()" style="width:160px">
+      <option value="">All Types</option>
+      <option value="fresh">Fresh Loan</option>
+      <option value="enhancement">Enhancement</option>
+      <option value="modification">Modification</option>
+    </select>
+    <span id="bpm-count" style="font-size:.8rem;color:var(--muted);margin-left:auto"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>BPM Workitem</th><th>Login Date</th><th>Customer</th>
+        <th>Type</th><th>Request</th><th>Status</th>
+        <th>Sanction</th><th>Disbursement</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="bpm-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ TARGETS ══════════ -->
+<div class="page" id="page-targets">
+  <div class="page-header">
+    <div class="page-title">Target Tracking <small>Annual targets & achievements</small></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <div class="card">
+      <div class="form-section-title">Set Targets</div>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group">
+          <label>Financial Year</label>
+          <input type="text" id="tgt-fy" placeholder="e.g. FY 2025-26"/>
+        </div>
+        <div class="form-group">
+          <label>Target New Disbursement (₹ Cr)</label>
+          <input type="number" id="tgt-disburse" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label>Target Total Book Growth (₹ Cr)</label>
+          <input type="number" id="tgt-book" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label>Previous Year End Book (₹ Cr)</label>
+          <input type="number" id="tgt-prev-ye" step="0.01"/>
+        </div>
+        <button class="btn btn-primary" onclick="saveTargets()">💾 Save Targets</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="form-section-title">Achievement Summary</div>
+      <div id="target-achievement"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BOOK ENTRY ══════════ -->
+<div class="page" id="page-book">
+  <div class="page-header">
+    <div class="page-title">Book Entry <small>Daily outstanding book</small></div>
+  </div>
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start">
+    <div class="card">
+      <div class="form-section-title">Add / Update Entry</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Date</label>
+        <input type="date" id="book-date"/>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Outstanding Book (₹ Crores)</label>
+        <input type="number" id="book-amount" step="0.01" placeholder="e.g. 45.23"/>
+      </div>
+      <button class="btn btn-primary" onclick="saveBook()">💾 Save Entry</button>
+    </div>
+    <div class="card">
+      <div class="form-section-title">Recent Book Entries</div>
+      <div class="table-wrap" style="border-radius:8px">
+        <table><thead><tr><th>Date</th><th>Book (₹ Cr)</th><th>Change</th></tr></thead>
+        <tbody id="book-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BRANCHES ══════════ -->
+<div class="page" id="page-branches">
+  <div class="page-header">
+    <div class="page-title">Branches <small>Linked branches</small></div>
+  </div>
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start">
+    <div class="card">
+      <div class="form-section-title">Add Branch</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Branch Name</label>
+        <input type="text" id="branch-name" placeholder="e.g. Palakkad Main"/>
+      </div>
+      <button class="btn btn-primary" onclick="addBranch()">+ Add Branch</button>
+    </div>
+    <div class="card">
+      <div class="form-section-title">All Branches</div>
+      <div id="branches-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ REPORTS ══════════ -->
+<div class="page" id="page-reports">
+  <div class="page-header">
+    <div class="page-title">Reports <small>Share via WhatsApp</small></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <div class="card">
+      <div class="form-section-title">📊 Book Movement Report</div>
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:16px">Generates a WhatsApp-ready book movement report for today.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+        <button class="btn btn-gold" id="wa-share-btn" style="display:none" onclick="shareWhatsApp()">📲 Share on WhatsApp</button>
+      </div>
+      <div id="report-output" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <div class="form-section-title">📈 Disbursement Summary</div>
+      <div id="disb-summary" style="font-size:.85rem;color:var(--muted)">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PROFILE ══════════ -->
+<div class="page" id="page-profile">
+  <div class="page-header">
+    <div class="page-title">Profile <small>Your account settings</small></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <div class="card">
+      <div class="form-section-title">Personal Information</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Full Name *</label>
+        <input type="text" id="p-name" placeholder="Your full name"/>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Mobile Number</label>
+        <input type="tel" id="p-mobile" placeholder="e.g. 9876543210"/>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Email Address</label>
+        <input type="email" id="p-email" disabled/>
+      </div>
+      <button class="btn btn-primary" onclick="saveProfile()">💾 Update Profile</button>
+    </div>
+    <div class="card">
+      <div class="form-section-title">Change Password</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Current Password *</label>
+        <input type="password" id="p-curr-pw" placeholder="Current password"/>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>New Password * (min 6 characters)</label>
+        <input type="password" id="p-new-pw" placeholder="New password"/>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Confirm New Password *</label>
+        <input type="password" id="p-conf-pw" placeholder="Confirm new password"/>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">🔒 Change Password</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- ══════════ CUSTOMER MODAL ══════════ -->
+<div class="modal-overlay" id="customer-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="cust-modal-title">Add Customer</div>
+      <button class="modal-close" onclick="closeModal('customer-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cust-id"/>
+      <div class="form-section">
+        <div class="form-section-title">Basic Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Customer Name *</label>
+            <input type="text" id="f-cust-name" placeholder="Full name"/>
+          </div>
+          <div class="form-group">
+            <label>Account Number</label>
+            <input type="text" id="f-acc-no" placeholder="Account number"/>
+          </div>
+          <div class="form-group">
+            <label>Customer ID</label>
+            <input type="text" id="f-cust-id" placeholder="Customer ID"/>
+          </div>
+          <div class="form-group">
+            <label>Branch</label>
+            <select id="f-branch"></select>
+          </div>
+          <div class="form-group">
+            <label>Nature of Account</label>
+            <select id="f-nature" onchange="toggleNatureFields()">
+              <option value="">-- Select --</option>
+              <option value="termloan">Term Loan</option>
+              <option value="ccol">CCOL</option>
+              <option value="overdraft">Overdraft</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Rate of Interest (%)</label>
+            <input type="number" id="f-roi" step="0.01" placeholder="e.g. 10.5"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Limit & Outstanding</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Sanctioned Limit (₹)</label>
+            <input type="number" id="f-san-limit" step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Outstanding Amount (₹)</label>
+            <input type="number" id="f-outstanding" step="0.01"/>
+          </div>
+          <div class="form-group" id="fg-expiry">
+            <label>Limit Expiry Date</label>
+            <input type="date" id="f-expiry"/>
+          </div>
+          <div class="form-group" id="fg-emi">
+            <label>Monthly EMI (₹)</label>
+            <input type="number" id="f-emi" step="0.01"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Collateral & Parties</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Collateral Details</label>
+            <textarea id="f-collateral" placeholder="Describe collateral / security details..."></textarea>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label>Related Party Names</label>
+          <div class="dynamic-list" id="related-parties-list"></div>
+          <button class="add-row-btn" onclick="addRelatedParty()">+ Add Related Party</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Insurance Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Stock Insurance Done?</label>
+            <select id="f-stock-ins" onchange="toggleStockIns()">
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+          <div class="form-group" id="fg-stock-expiry">
+            <label>Stock Insurance Expiry</label>
+            <input type="date" id="f-stock-expiry"/>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label style="font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px">Property Insurance Policies</label>
+          <div class="dynamic-list" id="prop-ins-list"></div>
+          <button class="add-row-btn" onclick="addPropIns()">+ Add Property Insurance</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('customer-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">💾 Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BPM MODAL ══════════ -->
+<div class="modal-overlay" id="bpm-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="bpm-modal-title">Add BPM Item</div>
+      <button class="modal-close" onclick="closeModal('bpm-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bpm-id"/>
+      <div class="form-section">
+        <div class="form-section-title">Application Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>BPM Workitem Number *</label>
+            <input type="text" id="b-workitem" placeholder="e.g. BPM2024001"/>
+          </div>
+          <div class="form-group">
+            <label>Date of Login</label>
+            <input type="date" id="b-login-date"/>
+          </div>
+          <div class="form-group">
+            <label>Nature of Request</label>
+            <select id="b-nature" onchange="toggleBpmFields()">
+              <option value="fresh">Fresh Loan</option>
+              <option value="enhancement">Enhancement</option>
+              <option value="modification">Modification</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Customer Type</label>
+            <select id="b-cust-type" onchange="toggleBpmCustomer()">
+              <option value="existing">Existing Customer</option>
+              <option value="new">New to Bank</option>
+            </select>
+          </div>
+          <div class="form-group" id="bg-existing-cust">
+            <label>Select Existing Customer</label>
+            <select id="b-existing-cust" onchange="onBpmCustomerSelect()">
+              <option value="">-- Select Customer --</option>
+            </select>
+          </div>
+          <div class="form-group" id="bg-new-cust" style="display:none">
+            <label>Customer Name</label>
+            <input type="text" id="b-new-cust-name" placeholder="Enter customer name"/>
+          </div>
+          <div class="form-group" id="bg-acc-no">
+            <label>Account Number</label>
+            <select id="b-acc-no">
+              <option value="">-- Select Account --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Status & Outcome</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Present Status</label>
+            <select id="b-status">
+              <option value="logged_in">Logged In</option>
+              <option value="dealing_officer">With Dealing Officer</option>
+              <option value="query_raised">Query Raised</option>
+              <option value="sanctioned">Sanctioned</option>
+              <option value="disbursed">Disbursed</option>
+              <option value="rejected">Rejected</option>
+              <option value="complete">Complete</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date of Sanction</label>
+            <input type="date" id="b-sanction-date"/>
+          </div>
+          <div class="form-group">
+            <label>Sanctioned Amount (₹)</label>
+            <input type="number" id="b-sanction-amt" step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Date of Disbursement</label>
+            <input type="date" id="b-disb-date"/>
+          </div>
+          <div class="form-group">
+            <label>Disbursement Amount (₹)</label>
+            <input type="number" id="b-disb-amt" step="0.01"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('bpm-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBpm()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal" style="max-width:900px">
+    <div class="modal-header">
+      <div class="modal-title" id="view-modal-title">Customer Details</div>
+      <button class="modal-close" onclick="closeModal('view-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="view-modal-body"></div>
+    <div class="modal-footer" id="view-modal-footer"></div>
+  </div>
+</div>
+
+<!-- ══════════ CSV UPLOAD MODAL ══════════ -->
+<div class="modal-overlay" id="csv-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">📥 Upload Portfolio CSV</div>
+      <button class="modal-close" onclick="closeModal('csv-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="csv-drop-area">
+        <div style="font-size:2rem;margin-bottom:8px">📋</div>
+        <p>Download the demo CSV template to see the required column format, then upload your filled CSV file.</p>
+        <button class="btn btn-outline btn-sm" onclick="downloadDemoCSV()">📥 Download Demo CSV Template</button>
+      </div>
+
+      <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:.8rem;color:var(--muted)">
+        <strong style="color:var(--gold)">CSV Column Guide:</strong>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem">
+          customer_name, account_number, customer_id, branch_name, nature_of_account (termloan/ccol/overdraft/others),
+          sanctioned_limit (₹), outstanding_amount (₹), rate_of_interest (%), monthly_emi (₹),
+          limit_expiry_date (YYYY-MM-DD), stock_insurance (0/1), stock_ins_expiry (YYYY-MM-DD),
+          collateral_details, related_parties (pipe-separated)
+        </span>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Select CSV File</label>
+        <input type="file" id="csv-file-input" accept=".csv" onchange="parseCSV(this)"/>
+      </div>
+
+      <div id="csv-preview" style="display:none">
+        <div class="form-section-title">Preview</div>
+        <div id="csv-preview-content"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('csv-modal')">Cancel</button>
+      <button class="btn btn-primary" id="csv-upload-btn" style="display:none" onclick="uploadCSV()">📤 Import Customers</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '/api';
+let authToken = localStorage.getItem('auth_token');
+let currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+let allCustomers = [], allBranches = [], currentReport = '', csvData = [];
+
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
+
+async function apiFetch(url, options = {}) {
+  options.headers = options.headers || {};
+  if (authToken) options.headers['Authorization'] = `Bearer ${authToken}`;
+  try {
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      authToken = null; currentUser = null;
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('current_user');
+      showAuthScreen(); return null;
+    }
+    return res;
+  } catch (e) { return null; }
+}
+
+async function apiGet(url) {
+  const res = await apiFetch(url);
+  if (!res || !res.ok) return null;
+  return res.json();
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('main').style.display = 'none';
+}
+
+function hideAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'flex';
+  document.getElementById('main').style.display = 'block';
+}
+
+function updateSidebarUser() {
+  if (currentUser) {
+    document.getElementById('rm-name-display').textContent = currentUser.name || 'RM';
+    document.getElementById('rm-mobile-display').textContent = currentUser.mobile || '';
+  }
+}
+
+function toggleAuthMode(mode) {
+  document.getElementById('login-form').style.display = mode === 'login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('register-error').style.display = 'none';
+}
+
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showAuthError('login-error','Enter email and password'); return; }
+  document.getElementById('login-error').style.display = 'none';
+  const res = await fetch(`${API}/auth/login`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email, password})
+  });
+  if (res.ok) {
+    const data = await res.json();
+    authToken = data.token; currentUser = data.user;
+    localStorage.setItem('auth_token', authToken);
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    hideAuthScreen(); updateSidebarUser(); initApp();
+  } else {
+    const e = await res.json();
+    showAuthError('login-error', e.detail || 'Login failed');
+  }
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const mobile = document.getElementById('reg-mobile').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!name || !email || !password) { showAuthError('register-error','Name, email and password are required'); return; }
+  if (password.length < 6) { showAuthError('register-error','Password must be at least 6 characters'); return; }
+  document.getElementById('register-error').style.display = 'none';
+  const res = await fetch(`${API}/auth/register`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, mobile, email, password})
+  });
+  if (res.ok) {
+    const data = await res.json();
+    authToken = data.token; currentUser = data.user;
+    localStorage.setItem('auth_token', authToken);
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    hideAuthScreen(); updateSidebarUser(); initApp();
+    toast('Welcome, ' + name + '! Account created.', 'success');
+  } else {
+    const e = await res.json();
+    showAuthError('register-error', e.detail || 'Registration failed');
+  }
+}
+
+async function doLogout() {
+  if (authToken) apiFetch(`${API}/auth/logout`, {method:'POST'});
+  authToken = null; currentUser = null;
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('current_user');
+  allCustomers = []; allBranches = [];
+  showAuthScreen();
+  toggleAuthMode('login');
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROFILE
+// ══════════════════════════════════════════════════════════════
+async function loadProfile() {
+  const u = await apiGet(`${API}/auth/profile`);
+  if (!u) return;
+  document.getElementById('p-name').value = u.name || '';
+  document.getElementById('p-mobile').value = u.mobile || '';
+  document.getElementById('p-email').value = u.email || '';
+  document.getElementById('p-curr-pw').value = '';
+  document.getElementById('p-new-pw').value = '';
+  document.getElementById('p-conf-pw').value = '';
+}
+
+async function saveProfile() {
+  const name = document.getElementById('p-name').value.trim();
+  const mobile = document.getElementById('p-mobile').value.trim();
+  if (!name) { toast('Name is required','error'); return; }
+  const res = await apiFetch(`${API}/auth/profile`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, mobile})
+  });
+  if (res && res.ok) {
+    const u = await res.json();
+    currentUser.name = u.name; currentUser.mobile = u.mobile;
+    localStorage.setItem('current_user', JSON.stringify(currentUser));
+    updateSidebarUser(); toast('Profile updated ✓','success');
+  } else {
+    const e = res ? await res.json() : {};
+    toast(e.detail || 'Failed to update profile','error');
+  }
+}
+
+async function changePassword() {
+  const current_password = document.getElementById('p-curr-pw').value;
+  const new_password = document.getElementById('p-new-pw').value;
+  const conf = document.getElementById('p-conf-pw').value;
+  if (!current_password || !new_password) { toast('Fill in all password fields','error'); return; }
+  if (new_password !== conf) { toast('New passwords do not match','error'); return; }
+  if (new_password.length < 6) { toast('Password must be at least 6 characters','error'); return; }
+  const name = document.getElementById('p-name').value || currentUser.name;
+  const mobile = document.getElementById('p-mobile').value || currentUser.mobile;
+  const res = await apiFetch(`${API}/auth/profile`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, mobile, current_password, new_password})
+  });
+  if (res && res.ok) {
+    toast('Password changed successfully ✓','success');
+    document.getElementById('p-curr-pw').value = '';
+    document.getElementById('p-new-pw').value = '';
+    document.getElementById('p-conf-pw').value = '';
+  } else {
+    const e = res ? await res.json() : {};
+    toast(e.detail || 'Failed to change password','error');
+  }
+}
+
+// ── Navigation ─────────────────────────────────────────────
+function showPage(page, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  const loaders = {
+    dashboard: loadDashboard, portfolio: loadCustomers, bpm: loadBpm,
+    targets: loadTargets, book: loadBook, branches: loadBranches,
+    reports: loadReportPage, profile: loadProfile
+  };
+  if (loaders[page]) loaders[page]();
+}
+
+// ── Toast ───────────────────────────────────────────────────
+let toastT;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(toastT); toastT = setTimeout(() => el.className = '', 2800);
+}
+
+// ── Modal ───────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Formatting helpers ──────────────────────────────────────
+function fmtCr(v) { if (!v && v!==0) return '--'; return '₹' + (v/10000000).toFixed(2) + ' Cr'; }
+function fmtAmt(v) { if (!v && v!==0) return '--'; return '₹' + Number(v).toLocaleString('en-IN'); }
+function fmtDate(d) { if (!d) return '--'; return d.split('-').reverse().join('/'); }
+function daysLeft(d) {
+  if (!d) return null;
+  return Math.round((new Date(d)-new Date())/(1000*60*60*24));
+}
+function statusBadge(s) {
+  const map = {
+    logged_in:['badge-blue','Logged In'], dealing_officer:['badge-cyan','Dealing Officer'],
+    query_raised:['badge-gold','Query Raised'], sanctioned:['badge-purple','Sanctioned'],
+    disbursed:['badge-green','Disbursed'], rejected:['badge-red','Rejected'],
+    complete:['badge-gray','Complete']
+  };
+  const [cls, label] = map[s] || ['badge-gray', s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function natureBadge(n) {
+  const map = {termloan:'badge-blue',ccol:'badge-cyan',overdraft:'badge-gold',others:'badge-gray'};
+  return `<span class="badge ${map[n]||'badge-gray'}">${n||'--'}</span>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  const d = await apiGet(API+'/dashboard');
+  if (!d) return;
+  const targets = d.targets || {};
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card blue"><div class="stat-label">Total Customers</div>
+      <div class="stat-value blue">${d.total_customers}</div><div class="stat-sub">In portfolio</div></div>
+    <div class="stat-card cyan"><div class="stat-label">Total Book</div>
+      <div class="stat-value cyan">${d.total_book} Cr</div><div class="stat-sub">Outstanding</div></div>
+    <div class="stat-card gold"><div class="stat-label">Active BPM</div>
+      <div class="stat-value gold">${d.bpm_active}</div><div class="stat-sub">In pipeline</div></div>
+    <div class="stat-card green"><div class="stat-label">YTD Disbursement</div>
+      <div class="stat-value green">${d.ytd_disb} Cr</div><div class="stat-sub">This financial year</div></div>
+    <div class="stat-card blue"><div class="stat-label">MTD Disbursement</div>
+      <div class="stat-value blue">${d.mtd_disb} Cr</div><div class="stat-sub">This month</div></div>
+    <div class="stat-card cyan"><div class="stat-label">FTD Disbursement</div>
+      <div class="stat-value cyan">${d.ftd_disb} Cr</div><div class="stat-sub">Today</div></div>
+  `;
+  if (targets.fy) {
+    const disbPct = targets.target_disburse ? Math.min(100,(d.ytd_disb/targets.target_disburse)*100).toFixed(1) : 0;
+    const bookPct = targets.target_book ? Math.min(100,(d.total_book/targets.target_book)*100).toFixed(1) : 0;
+    document.getElementById('dash-targets-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div><div style="font-size:.82rem;color:var(--muted);margin-bottom:4px">New Disbursement — ${targets.fy}</div>
+          <div style="font-size:1.1rem;font-weight:700">${d.ytd_disb} Cr <span style="color:var(--muted);font-size:.8rem;font-weight:400">/ ${targets.target_disburse||'--'} Cr</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${disbPct}%;background:var(--success)"></div></div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:4px">${disbPct}% achieved</div></div>
+        <div><div style="font-size:.82rem;color:var(--muted);margin-bottom:4px">Book Size Target</div>
+          <div style="font-size:1.1rem;font-weight:700">${d.total_book} Cr <span style="color:var(--muted);font-size:.8rem;font-weight:400">/ ${targets.target_book||'--'} Cr</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${bookPct}%;background:var(--accent)"></div></div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:4px">${bookPct}% achieved</div></div>
+      </div>`;
+  } else {
+    document.getElementById('dash-targets-content').innerHTML = '<span style="font-size:.85rem">No targets set.</span>';
+  }
+  const limEl = document.getElementById('dash-exp-limits');
+  if (!d.expiring_limits.length) {
+    limEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:1.5rem">✅</div><div class="empty-text">No limits expiring in 60 days</div></div>';
+  } else {
+    limEl.innerHTML = d.expiring_limits.map(r => {
+      const dl = daysLeft(r.limit_expiry_date);
+      const cls = dl<=15?'danger':'warn';
+      return `<div class="alert-item ${cls}">
+        <div class="alert-dot" style="background:var(--${cls})"></div>
+        <div class="alert-info"><div class="alert-name">${r.customer_name}</div>
+        <div class="alert-detail">${r.account_number||''} · ${fmtCr(r.sanctioned_limit)}</div></div>
+        <div class="alert-date">${fmtDate(r.limit_expiry_date)}<br><span style="font-size:.65rem">${dl}d left</span></div></div>`;
+    }).join('');
+  }
+  const insEl = document.getElementById('dash-exp-ins');
+  if (!d.expiring_insurance.length) {
+    insEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:1.5rem">✅</div><div class="empty-text">No insurance expiring in 30 days</div></div>';
+  } else {
+    insEl.innerHTML = d.expiring_insurance.map(r => {
+      const dl = daysLeft(r.expiry);
+      const cls = dl<=0?'danger':'warn';
+      return `<div class="alert-item ${cls}">
+        <div class="alert-dot" style="background:var(--${cls})"></div>
+        <div class="alert-info"><div class="alert-name">${r.customer_name}</div>
+        <div class="alert-detail">${r.ins_type}</div></div>
+        <div class="alert-date">${fmtDate(r.expiry)}<br><span style="font-size:.65rem;color:${dl<=0?'var(--danger)':'var(--warn)'};">${dl<=0?'EXPIRED':dl+'d left'}</span></div></div>`;
+    }).join('');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// PORTFOLIO
+// ════════════════════════════════════════════════════════════
+async function loadCustomers() {
+  const search = document.getElementById('cust-search')?.value || '';
+  const branch = document.getElementById('cust-branch-filter')?.value || '';
+  const nature = document.getElementById('cust-nature-filter')?.value || '';
+  const params = new URLSearchParams({search, nature});
+  if (branch) params.set('branch_id', branch);
+  const res = await apiFetch(`${API}/customers?${params}`);
+  if (!res) return;
+  const data = await res.json();
+  allCustomers = data;
+  document.getElementById('cust-count').textContent = `${data.length} customer${data.length!==1?'s':''}`;
+  const tb = document.getElementById('cust-table');
+  if (!data.length) {
+    tb.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No customers found</div></div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = data.map(c => {
+    const ins = insStatus(c);
+    return `<tr>
+      <td><strong>${c.customer_name}</strong></td>
+      <td class="mono">${c.account_number||'--'}</td>
+      <td>${c.branch_name||'--'}</td>
+      <td>${natureBadge(c.nature_of_account)}</td>
+      <td class="mono">${fmtCr(c.sanctioned_limit)}</td>
+      <td class="mono">${fmtCr(c.outstanding_amount)}</td>
+      <td>${c.rate_of_interest?c.rate_of_interest+'%':'--'}</td>
+      <td>${ins}</td>
+      <td>
+        <button class="btn btn-outline btn-xs" onclick="viewCustomer(${c.id})" style="margin-right:4px">View</button>
+        <button class="btn btn-outline btn-xs" onclick="editCustomer(${c.id})" style="margin-right:4px">Edit</button>
+        <button class="btn btn-xs" style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.3)" onclick="deleteCustomer(${c.id})">Del</button>
+      </td></tr>`;
+  }).join('');
+}
+
+function insStatus(c) {
+  let badges = [];
+  if (c.stock_insurance) {
+    const dl = daysLeft(c.stock_ins_expiry);
+    if (dl === null) badges.push('<span class="badge badge-green">Stock ✓</span>');
+    else if (dl <= 0) badges.push('<span class="badge badge-red">Stock EXP</span>');
+    else if (dl <= 30) badges.push(`<span class="badge badge-gold">Stock ${dl}d</span>`);
+    else badges.push('<span class="badge badge-green">Stock ✓</span>');
+  } else { badges.push('<span class="badge badge-gray">No Stock</span>'); }
+  if (c.property_insurances?.length) {
+    const hasExp = c.property_insurances.some(p => { const d=daysLeft(p.expiry_date); return d!==null && d<=30; });
+    badges.push(hasExp ? '<span class="badge badge-gold">Prop ⚠</span>' : '<span class="badge badge-green">Prop ✓</span>');
+  }
+  return badges.join(' ');
+}
+
+function openCustomerModal(cid=null) {
+  document.getElementById('cust-modal-title').textContent = cid ? 'Edit Customer' : 'Add Customer';
+  document.getElementById('cust-id').value = cid || '';
+  ['f-cust-name','f-acc-no','f-cust-id','f-roi','f-san-limit','f-outstanding','f-expiry','f-emi','f-collateral','f-stock-expiry'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-nature').value = '';
+  document.getElementById('f-stock-ins').value = '0';
+  document.getElementById('related-parties-list').innerHTML = '';
+  document.getElementById('prop-ins-list').innerHTML = '';
+  populateBranchDropdown('f-branch');
+  toggleNatureFields(); toggleStockIns();
+  openModal('customer-modal');
+}
+
+async function editCustomer(cid) {
+  const res = await apiFetch(`${API}/customers/${cid}`);
+  if (!res) return;
+  const c = await res.json();
+  openCustomerModal(cid);
+  setTimeout(() => {
+    document.getElementById('cust-id').value = c.id;
+    document.getElementById('f-cust-name').value = c.customer_name||'';
+    document.getElementById('f-acc-no').value = c.account_number||'';
+    document.getElementById('f-cust-id').value = c.customer_id||'';
+    document.getElementById('f-branch').value = c.branch_id||'';
+    document.getElementById('f-nature').value = c.nature_of_account||'';
+    document.getElementById('f-roi').value = c.rate_of_interest||'';
+    document.getElementById('f-san-limit').value = c.sanctioned_limit||'';
+    document.getElementById('f-outstanding').value = c.outstanding_amount||'';
+    document.getElementById('f-expiry').value = c.limit_expiry_date||'';
+    document.getElementById('f-emi').value = c.monthly_emi||'';
+    document.getElementById('f-collateral').value = c.collateral_details||'';
+    document.getElementById('f-stock-ins').value = c.stock_insurance?'1':'0';
+    document.getElementById('f-stock-expiry').value = c.stock_ins_expiry||'';
+    toggleNatureFields(); toggleStockIns();
+    (c.related_parties||[]).forEach(p => addRelatedParty(p));
+    (c.property_insurances||[]).forEach(p => addPropIns(p.policy_number, p.description, p.expiry_date));
+  }, 50);
+}
+
+async function viewCustomer(cid) {
+  const res = await apiFetch(`${API}/customers/${cid}`);
+  if (!res) return;
+  const c = await res.json();
+  const rp = (c.related_parties||[]).join(', ') || '--';
+  const propIns = (c.property_insurances||[]).map(p =>
+    `<tr><td>${p.policy_number||'--'}</td><td>${p.description||'--'}</td><td>${fmtDate(p.expiry_date)}</td>
+    <td>${daysLeft(p.expiry_date)!==null?(daysLeft(p.expiry_date)<=0?'<span class="badge badge-red">EXPIRED</span>':`<span class="badge badge-${daysLeft(p.expiry_date)<=30?'gold':'green'}">${daysLeft(p.expiry_date)}d</span>`):'--'}</td></tr>`
+  ).join('');
+  document.getElementById('view-modal-title').textContent = c.customer_name;
+  document.getElementById('view-modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      ${field('Account No.',c.account_number)} ${field('Customer ID',c.customer_id)}
+      ${field('Branch',c.branch_name)} ${field('Nature',c.nature_of_account?.toUpperCase())}
+      ${field('Sanctioned Limit',fmtAmt(c.sanctioned_limit))} ${field('Outstanding',fmtAmt(c.outstanding_amount))}
+      ${field('Rate of Interest',c.rate_of_interest?c.rate_of_interest+'%':'--')}
+      ${c.nature_of_account==='termloan'?field('Monthly EMI',fmtAmt(c.monthly_emi)):field('Limit Expiry',fmtDate(c.limit_expiry_date))}
+    </div>
+    <div class="form-section-title">Collateral</div>
+    <div style="font-size:.88rem;color:var(--subtle);margin-bottom:20px;line-height:1.6">${c.collateral_details||'--'}</div>
+    <div class="form-section-title">Related Parties</div>
+    <div style="font-size:.88rem;margin-bottom:20px">${rp}</div>
+    <div class="form-section-title">Insurance</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      ${field('Stock Insurance',c.stock_insurance?'Yes':'No')}
+      ${c.stock_insurance?field('Stock Expiry',fmtDate(c.stock_ins_expiry)):''}
+    </div>
+    ${propIns?`<div class="table-wrap"><table><thead><tr><th>Policy No.</th><th>Description</th><th>Expiry</th><th>Status</th></tr></thead><tbody>${propIns}</tbody></table></div>`:'<div style="color:var(--muted);font-size:.85rem">No property insurance records</div>'}
+  `;
+  document.getElementById('view-modal-footer').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal('view-modal')">Close</button>
+    <button class="btn btn-primary" onclick="closeModal('view-modal');editCustomer(${c.id})">Edit</button>`;
+  openModal('view-modal');
+}
+
+function field(label, value) {
+  return `<div style="background:var(--panel);border-radius:8px;padding:12px">
+    <div style="font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">${label}</div>
+    <div style="font-size:.92rem;font-weight:500">${value||'--'}</div></div>`;
+}
+
+function toggleNatureFields() {
+  const n = document.getElementById('f-nature').value;
+  document.getElementById('fg-expiry').style.display = (n==='ccol'||n==='overdraft') ? 'flex' : 'none';
+  document.getElementById('fg-emi').style.display = n==='termloan' ? 'flex' : 'none';
+}
+function toggleStockIns() {
+  const v = document.getElementById('f-stock-ins').value;
+  document.getElementById('fg-stock-expiry').style.display = v==='1' ? 'flex' : 'none';
+}
+
+function addRelatedParty(val='') {
+  const d = document.createElement('div'); d.className = 'dynamic-row';
+  d.innerHTML = `<input type="text" placeholder="Related party name" value="${val}"/>
+    <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('related-parties-list').appendChild(d);
+}
+
+function addPropIns(policy='', desc='', expiry='') {
+  const d = document.createElement('div'); d.className = 'dynamic-row'; d.style.flexWrap='wrap';
+  d.innerHTML = `<input type="text" placeholder="Policy No." value="${policy}" style="min-width:120px;flex:1"/>
+    <input type="text" placeholder="Description / Property" value="${desc}" style="min-width:140px;flex:2"/>
+    <input type="date" value="${expiry}" style="min-width:140px;flex:1"/>
+    <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('prop-ins-list').appendChild(d);
+}
+
+async function saveCustomer() {
+  const cid = document.getElementById('cust-id').value;
+  const related = [...document.querySelectorAll('#related-parties-list input')].map(i=>i.value).filter(Boolean);
+  const propIns = [...document.querySelectorAll('#prop-ins-list .dynamic-row')].map(r => {
+    const ins = r.querySelectorAll('input');
+    return {policy_number: ins[0]?.value||'', description: ins[1]?.value||'', expiry_date: ins[2]?.value||''};
+  });
+  const payload = {
+    account_number: document.getElementById('f-acc-no').value,
+    customer_id: document.getElementById('f-cust-id').value,
+    branch_id: +document.getElementById('f-branch').value || null,
+    customer_name: document.getElementById('f-cust-name').value,
+    nature_of_account: document.getElementById('f-nature').value,
+    sanctioned_limit: +document.getElementById('f-san-limit').value || null,
+    limit_expiry_date: document.getElementById('f-expiry').value,
+    monthly_emi: +document.getElementById('f-emi').value || null,
+    rate_of_interest: +document.getElementById('f-roi').value || null,
+    collateral_details: document.getElementById('f-collateral').value,
+    outstanding_amount: +document.getElementById('f-outstanding').value || null,
+    related_parties: related,
+    stock_insurance: +document.getElementById('f-stock-ins').value,
+    stock_ins_expiry: document.getElementById('f-stock-expiry').value,
+    property_insurances: propIns
+  };
+  if (!payload.customer_name) { toast('Customer name is required','error'); return; }
+  const url = cid ? `${API}/customers/${cid}` : `${API}/customers`;
+  const method = cid ? 'PUT' : 'POST';
+  const res = await apiFetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  if (res && res.ok) { toast(cid?'Customer updated ✓':'Customer added ✓','success'); closeModal('customer-modal'); loadCustomers(); }
+  else { const e = res ? await res.json() : {}; toast(e.detail||'Error saving','error'); }
+}
+
+async function deleteCustomer(cid) {
+  if (!confirm('Delete this customer?')) return;
+  await apiFetch(`${API}/customers/${cid}`, {method:'DELETE'});
+  toast('Customer deleted'); loadCustomers();
+}
+
+function populateBranchDropdown(id) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">-- Select Branch --</option>' +
+    allBranches.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CSV UPLOAD
+// ══════════════════════════════════════════════════════════════
+function openCsvModal() {
+  csvData = [];
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-preview').style.display = 'none';
+  document.getElementById('csv-upload-btn').style.display = 'none';
+  openModal('csv-modal');
+}
+
+function downloadDemoCSV() {
+  const headers = [
+    'customer_name','account_number','customer_id','branch_name',
+    'nature_of_account','sanctioned_limit','outstanding_amount','rate_of_interest',
+    'monthly_emi','limit_expiry_date','stock_insurance','stock_ins_expiry',
+    'collateral_details','related_parties'
+  ];
+  const rows = [
+    ['ACME Traders Pvt Ltd','SIB0001234567','CUST001','Palakkad Main',
+     'ccol','5000000','3500000','10.50','','2025-12-31','1','2025-06-30',
+     'Property at MG Road Palakkad - 2000 sqft commercial','John Doe|Jane Doe'],
+    ['XYZ Manufacturing','SIB0009876543','CUST002','Thrissur Branch',
+     'termloan','10000000','8000000','11.00','150000','','0','',
+     'Plant and Machinery - CNC machines',''],
+    ['Sunrise Enterprises','SIB0004567890','CUST003','Kozhikode Main',
+     'overdraft','2500000','1800000','12.00','','2025-09-30','1','2025-03-31',
+     'Stock pledge - inventory','Business Partner Name'],
+    ['Green Valley Foods','SIB0001112233','CUST004','Palakkad Main',
+     'others','3000000','2200000','10.75','','','0','',
+     'Mortgage of residential property','Director Name']
+  ];
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sib_portfolio_template.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Demo CSV downloaded ✓','success');
+}
+
+function parseCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) { toast('CSV file is empty or has no data rows','error'); return; }
+    const rawHeaders = lines[0].split(',');
+    const headers = rawHeaders.map(h => h.replace(/^["']|["']$/g,'').trim().toLowerCase().replace(/\s+/g,'_'));
+    csvData = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const vals = [];
+      let inQuote = false, cur = '';
+      for (let ch of line) {
+        if (ch === '"') { inQuote = !inQuote; }
+        else if (ch === ',' && !inQuote) { vals.push(cur.trim()); cur = ''; }
+        else cur += ch;
+      }
+      vals.push(cur.trim());
+      const row = {};
+      headers.forEach((h, idx) => row[h] = (vals[idx] || '').replace(/^["']|["']$/g,'').trim());
+      if (row.customer_name) csvData.push(row);
+    }
+    if (!csvData.length) { toast('No valid rows found in CSV','error'); return; }
+    showCSVPreview();
+  };
+  reader.readAsText(file);
+}
+
+function showCSVPreview() {
+  const preview = document.getElementById('csv-preview');
+  const content = document.getElementById('csv-preview-content');
+  const maxShow = Math.min(5, csvData.length);
+  content.innerHTML = `
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">
+      ${csvData.length} customer${csvData.length!==1?'s':''} found — showing first ${maxShow}
+    </div>
+    <div class="table-wrap" style="max-height:200px;overflow-y:auto">
+      <table><thead><tr>
+        <th>Customer Name</th><th>Account No.</th><th>Type</th><th>Limit (₹)</th>
+      </tr></thead><tbody>
+        ${csvData.slice(0, maxShow).map(r => `<tr>
+          <td><strong>${r.customer_name||'--'}</strong></td>
+          <td class="mono">${r.account_number||'--'}</td>
+          <td>${r.nature_of_account||'--'}</td>
+          <td class="mono">₹${Number(r.sanctioned_limit||0).toLocaleString('en-IN')}</td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div>`;
+  preview.style.display = 'block';
+  document.getElementById('csv-upload-btn').style.display = 'inline-flex';
+}
+
+async function uploadCSV() {
+  if (!csvData.length) return;
+  const customers = csvData.map(r => {
+    const branch = allBranches.find(b => b.name.toLowerCase() === (r.branch_name||'').toLowerCase());
+    const related = r.related_parties ? r.related_parties.split('|').map(s=>s.trim()).filter(Boolean) : [];
+    return {
+      customer_name: r.customer_name || '',
+      account_number: r.account_number || '',
+      customer_id: r.customer_id || '',
+      branch_id: branch ? branch.id : null,
+      nature_of_account: r.nature_of_account || '',
+      sanctioned_limit: parseFloat(r.sanctioned_limit) || null,
+      outstanding_amount: parseFloat(r.outstanding_amount) || null,
+      rate_of_interest: parseFloat(r.rate_of_interest) || null,
+      monthly_emi: parseFloat(r.monthly_emi) || null,
+      limit_expiry_date: r.limit_expiry_date || '',
+      stock_insurance: r.stock_insurance === '1' ? 1 : 0,
+      stock_ins_expiry: r.stock_ins_expiry || '',
+      collateral_details: r.collateral_details || '',
+      related_parties: related,
+      property_insurances: []
+    };
+  }).filter(c => c.customer_name);
+
+  const btn = document.getElementById('csv-upload-btn');
+  btn.textContent = 'Importing...'; btn.disabled = true;
+
+  const res = await apiFetch(`${API}/customers/bulk`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({customers})
+  });
+
+  btn.textContent = '📤 Import Customers'; btn.disabled = false;
+
+  if (res && res.ok) {
+    const data = await res.json();
+    let msg = `${data.added} customer${data.added!==1?'s':''} imported successfully ✓`;
+    if (data.errors && data.errors.length) msg += ` (${data.errors.length} skipped)`;
+    toast(msg,'success');
+    closeModal('csv-modal');
+    loadCustomers();
+    csvData = [];
+  } else {
+    toast('Import failed — please check your CSV format','error');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// BPM TRACKING
+// ════════════════════════════════════════════════════════════
+async function loadBpm() {
+  const status = document.getElementById('bpm-status-filter')?.value||'';
+  const nature = document.getElementById('bpm-nature-filter')?.value||'';
+  const res = await apiFetch(`${API}/bpm?status=${status}&nature=${nature}`);
+  if (!res) return;
+  const data = await res.json();
+  document.getElementById('bpm-count').textContent = `${data.length} item${data.length!==1?'s':''}`;
+  const tb = document.getElementById('bpm-table');
+  if (!data.length) {
+    tb.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-text">No BPM items found</div></div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = data.map(b => {
+    const custName = b.customer_type==='existing' ? (b.existing_name||b.customer_name) : b.customer_name;
+    const nature = {fresh:'Fresh',enhancement:'Enhancement',modification:'Modification'}[b.nature_of_request]||b.nature_of_request;
+    const ctype = b.customer_type==='existing' ? '<span class="badge badge-green">Existing</span>' : '<span class="badge badge-blue">New</span>';
+    return `<tr>
+      <td class="mono"><strong>${b.bpm_workitem}</strong></td>
+      <td>${fmtDate(b.date_of_login)}</td>
+      <td>${custName||'--'} ${ctype}</td>
+      <td><span class="badge badge-blue">${nature}</span></td>
+      <td>${b.account_number||'--'}</td>
+      <td>${statusBadge(b.present_status)}</td>
+      <td>${b.sanctioned_amount?`<div style="font-size:.75rem;color:var(--muted)">${fmtDate(b.date_of_sanction)}</div>${fmtCr(b.sanctioned_amount)}`:'--'}</td>
+      <td>${b.disbursement_amount?`<div style="font-size:.75rem;color:var(--muted)">${fmtDate(b.date_of_disbursement)}</div>${fmtCr(b.disbursement_amount)}`:'--'}</td>
+      <td>
+        <button class="btn btn-outline btn-xs" onclick="editBpm(${b.id})" style="margin-right:4px">Edit</button>
+        <button class="btn btn-xs" style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.3)" onclick="deleteBpm(${b.id})">Del</button>
+      </td></tr>`;
+  }).join('');
+}
+
+async function openBpmModal(bid=null) {
+  document.getElementById('bpm-modal-title').textContent = bid ? 'Edit BPM Item' : 'Add BPM Item';
+  document.getElementById('bpm-id').value = bid||'';
+  document.getElementById('b-workitem').value=''; document.getElementById('b-login-date').value='';
+  document.getElementById('b-nature').value='fresh'; document.getElementById('b-cust-type').value='existing';
+  document.getElementById('b-sanction-date').value=''; document.getElementById('b-sanction-amt').value='';
+  document.getElementById('b-disb-date').value=''; document.getElementById('b-disb-amt').value='';
+  document.getElementById('b-status').value='logged_in';
+  const custSel = document.getElementById('b-existing-cust');
+  custSel.innerHTML = '<option value="">-- Select Customer --</option>' +
+    allCustomers.map(c=>`<option value="${c.id}" data-acc="${c.account_number||''}">${c.customer_name}</option>`).join('');
+  document.getElementById('b-acc-no').innerHTML = '<option value="">-- Select Account --</option>';
+  toggleBpmFields(); toggleBpmCustomer();
+  openModal('bpm-modal');
+}
+
+async function editBpm(bid) {
+  await openBpmModal(bid);
+  const res = await apiFetch(`${API}/bpm`);
+  if (!res) return;
+  const all = await res.json();
+  const b = all.find(x=>x.id===bid);
+  if (!b) return;
+  setTimeout(()=>{
+    document.getElementById('bpm-id').value = b.id;
+    document.getElementById('b-workitem').value = b.bpm_workitem||'';
+    document.getElementById('b-login-date').value = b.date_of_login||'';
+    document.getElementById('b-nature').value = b.nature_of_request||'fresh';
+    document.getElementById('b-cust-type').value = b.customer_type||'existing';
+    document.getElementById('b-status').value = b.present_status||'logged_in';
+    document.getElementById('b-sanction-date').value = b.date_of_sanction||'';
+    document.getElementById('b-sanction-amt').value = b.sanctioned_amount||'';
+    document.getElementById('b-disb-date').value = b.date_of_disbursement||'';
+    document.getElementById('b-disb-amt').value = b.disbursement_amount||'';
+    toggleBpmFields(); toggleBpmCustomer();
+    if (b.customer_type==='existing' && b.existing_customer_id) {
+      document.getElementById('b-existing-cust').value = b.existing_customer_id;
+      onBpmCustomerSelect();
+      setTimeout(()=>{ document.getElementById('b-acc-no').value = b.account_number||''; }, 50);
+    } else {
+      document.getElementById('b-new-cust-name').value = b.customer_name||'';
+    }
+  }, 50);
+}
+
+function toggleBpmFields() {
+  const n = document.getElementById('b-nature').value;
+  document.getElementById('bg-acc-no').style.display = (n==='enhancement'||n==='modification') ? 'flex' : 'none';
+}
+function toggleBpmCustomer() {
+  const t = document.getElementById('b-cust-type').value;
+  document.getElementById('bg-existing-cust').style.display = t==='existing' ? 'flex' : 'none';
+  document.getElementById('bg-new-cust').style.display = t==='new' ? 'flex' : 'none';
+}
+function onBpmCustomerSelect() {
+  const sel = document.getElementById('b-existing-cust');
+  const opt = sel.selectedOptions[0];
+  const acc = opt?.dataset.acc || '';
+  const accSel = document.getElementById('b-acc-no');
+  accSel.innerHTML = `<option value="">-- Select --</option>${acc?`<option value="${acc}">${acc}</option>`:''}`;
+  if (acc) accSel.value = acc;
+}
+
+async function saveBpm() {
+  const bid = document.getElementById('bpm-id').value;
+  const custType = document.getElementById('b-cust-type').value;
+  const existCust = document.getElementById('b-existing-cust');
+  const custName = custType==='existing'
+    ? (existCust.selectedOptions[0]?.text || '')
+    : document.getElementById('b-new-cust-name').value;
+  const payload = {
+    bpm_workitem: document.getElementById('b-workitem').value,
+    date_of_login: document.getElementById('b-login-date').value,
+    nature_of_request: document.getElementById('b-nature').value,
+    customer_type: custType,
+    customer_name: custName,
+    existing_customer_id: custType==='existing' ? (+existCust.value||null) : null,
+    account_number: document.getElementById('b-acc-no').value,
+    present_status: document.getElementById('b-status').value,
+    date_of_sanction: document.getElementById('b-sanction-date').value,
+    sanctioned_amount: +document.getElementById('b-sanction-amt').value||null,
+    date_of_disbursement: document.getElementById('b-disb-date').value,
+    disbursement_amount: +document.getElementById('b-disb-amt').value||null
+  };
+  if (!payload.bpm_workitem) { toast('BPM Workitem number required','error'); return; }
+  const url = bid ? `${API}/bpm/${bid}` : `${API}/bpm`;
+  const method = bid ? 'PUT' : 'POST';
+  const res = await apiFetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  if (res && res.ok) { toast(bid?'BPM item updated ✓':'BPM item added ✓','success'); closeModal('bpm-modal'); loadBpm(); }
+  else { const e = res ? await res.json() : {}; toast(e.detail||'Error','error'); }
+}
+
+async function deleteBpm(bid) {
+  if (!confirm('Delete this BPM item?')) return;
+  await apiFetch(`${API}/bpm/${bid}`, {method:'DELETE'});
+  toast('BPM item deleted'); loadBpm();
+}
+
+// ════════════════════════════════════════════════════════════
+// TARGETS
+// ════════════════════════════════════════════════════════════
+async function loadTargets() {
+  const t = await apiGet(`${API}/targets`);
+  if (t && t.fy) {
+    document.getElementById('tgt-fy').value = t.fy||'';
+    document.getElementById('tgt-disburse').value = t.target_disburse||'';
+    document.getElementById('tgt-book').value = t.target_book||'';
+    document.getElementById('tgt-prev-ye').value = t.previous_yearend_book||'';
+  }
+  const d = await apiGet(`${API}/dashboard`);
+  if (!d || !t) return;
+  const disbPct = t.target_disburse ? Math.min(100,(d.ytd_disb/t.target_disburse)*100).toFixed(1) : 0;
+  const bookPct = t.target_book ? Math.min(100,(d.total_book/t.target_book)*100).toFixed(1) : 0;
+  document.getElementById('target-achievement').innerHTML = t && t.fy ? `
+    <div style="margin-bottom:20px"><div style="font-size:.8rem;color:var(--muted)">FY: ${t.fy}</div></div>
+    ${achievBar('YTD Disbursement', d.ytd_disb, t.target_disburse, disbPct, 'Cr', 'var(--success)')}
+    ${achievBar('Book Size', d.total_book, t.target_book, bookPct, 'Cr', 'var(--accent)')}
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:6px">DISBURSEMENT BREAKDOWN</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:.83rem">
+        <div style="text-align:center"><div style="color:var(--muted);font-size:.7rem">FTD</div><div style="font-weight:700;color:var(--accent2)">${d.ftd_disb} Cr</div></div>
+        <div style="text-align:center"><div style="color:var(--muted);font-size:.7rem">MTD</div><div style="font-weight:700;color:var(--accent)">${d.mtd_disb} Cr</div></div>
+        <div style="text-align:center"><div style="color:var(--muted);font-size:.7rem">YTD</div><div style="font-weight:700;color:var(--success)">${d.ytd_disb} Cr</div></div>
+      </div></div>` : '<div style="color:var(--muted);font-size:.85rem">No targets set yet.</div>';
+}
+
+function achievBar(label, actual, target, pct, unit, color) {
+  return `<div style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:.82rem;color:var(--subtle)">${label}</span>
+      <span style="font-size:.82rem;font-family:'JetBrains Mono',monospace;font-weight:600">${actual} / ${target||'--'} ${unit}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:3px">${pct}% achieved</div>
+  </div>`;
+}
+
+async function saveTargets() {
+  const payload = {
+    fy: document.getElementById('tgt-fy').value,
+    target_disburse: +document.getElementById('tgt-disburse').value||null,
+    target_book: +document.getElementById('tgt-book').value||null,
+    previous_yearend_book: +document.getElementById('tgt-prev-ye').value||null
+  };
+  if (!payload.fy) { toast('Please enter financial year','error'); return; }
+  const res = await apiFetch(`${API}/targets`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  if (res && res.ok) { toast('Targets saved ✓','success'); loadTargets(); }
+}
+
+// ════════════════════════════════════════════════════════════
+// BOOK ENTRY
+// ════════════════════════════════════════════════════════════
+async function loadBook() {
+  document.getElementById('book-date').value = new Date().toISOString().split('T')[0];
+  const data = await apiGet(`${API}/book`);
+  if (!data) return;
+  const tb = document.getElementById('book-table');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="3"><div class="empty-state" style="padding:20px">No entries yet</div></td></tr>'; return; }
+  tb.innerHTML = data.map((r,i) => {
+    const prev = data[i+1];
+    const change = prev ? (r.book_amount - prev.book_amount).toFixed(2) : null;
+    const chgEl = change !== null
+      ? `<span style="color:${+change>=0?'var(--success)':'var(--danger)'}">${+change>=0?'+':''}${change}</span>`
+      : '--';
+    return `<tr><td>${fmtDate(r.entry_date)}</td>
+      <td class="mono" style="font-weight:600">${r.book_amount} Cr</td>
+      <td class="mono">${chgEl}</td></tr>`;
+  }).join('');
+}
+
+async function saveBook() {
+  const date = document.getElementById('book-date').value;
+  const amount = +document.getElementById('book-amount').value;
+  if (!date || !amount) { toast('Enter date and amount','error'); return; }
+  const res = await apiFetch(`${API}/book`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({entry_date:date, book_amount:amount})});
+  if (res && res.ok) { toast('Book entry saved ✓','success'); loadBook(); }
+}
+
+// ════════════════════════════════════════════════════════════
+// BRANCHES
+// ════════════════════════════════════════════════════════════
+async function loadBranches() {
+  const data = await apiGet(`${API}/branches`);
+  if (!data) return;
+  allBranches = data;
+  const el = document.getElementById('branches-list');
+  if (!data.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏦</div><div class="empty-text">No branches added</div></div>'; return; }
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">` +
+    data.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--panel);border-radius:9px;border:1px solid var(--border)">
+      <span style="font-size:1.1rem">🏦</span>
+      <span style="flex:1;font-weight:500">${b.name}</span>
+      <button class="btn btn-xs" style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.3)" onclick="deleteBranch(${b.id})">Delete</button>
+    </div>`).join('') + `</div>`;
+  const bf = document.getElementById('cust-branch-filter');
+  if (bf) bf.innerHTML = '<option value="">All Branches</option>' + data.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+}
+
+async function addBranch() {
+  const name = document.getElementById('branch-name').value.trim();
+  if (!name) { toast('Enter branch name','error'); return; }
+  const res = await apiFetch(`${API}/branches`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})});
+  if (res && res.ok) { document.getElementById('branch-name').value=''; toast('Branch added ✓','success'); loadBranches(); }
+  else toast('Branch already exists','error');
+}
+
+async function deleteBranch(bid) {
+  if (!confirm('Delete this branch?')) return;
+  await apiFetch(`${API}/branches/${bid}`, {method:'DELETE'});
+  toast('Branch deleted'); loadBranches();
+}
+
+// ════════════════════════════════════════════════════════════
+// REPORTS
+// ════════════════════════════════════════════════════════════
+async function loadReportPage() {
+  const d = await apiGet(`${API}/dashboard`);
+  if (!d) return;
+  document.getElementById('disb-summary').innerHTML = `
+    <div style="display:grid;gap:14px;margin-top:8px">
+      ${disbRow('FTD Disbursement', d.ftd_disb)}
+      ${disbRow('MTD Disbursement', d.mtd_disb)}
+      ${disbRow('YTD Disbursement', d.ytd_disb)}
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:2px">
+        ${disbRow('Current Book', d.total_book)}
+        ${disbRow('Total Customers', d.total_customers, '')}
+      </div>
+    </div>`;
+}
+
+function disbRow(label, val, unit='Cr') {
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+    <span style="color:var(--muted)">${label}</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text)">${val} ${unit}</span>
+  </div>`;
+}
+
+async function generateReport() {
+  const data = await apiGet(`${API}/report/book-movement`);
+  if (!data) return;
+  currentReport = data.report;
+  document.getElementById('report-output').innerHTML = `<div class="report-box">${currentReport}</div>`;
+  document.getElementById('wa-share-btn').style.display = 'inline-flex';
+  toast('Report generated ✓','success');
+}
+
+function shareWhatsApp() {
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(currentReport)}`, '_blank');
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+async function initApp() {
+  updateSidebarUser();
+  const branches = await apiGet(`${API}/branches`);
+  allBranches = branches || [];
+  const custs = await apiGet(`${API}/customers`);
+  allCustomers = custs || [];
+  // Activate dashboard nav item
+  const firstNav = document.querySelector('.nav-item');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (firstNav) firstNav.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-dashboard').classList.add('active');
+  loadDashboard();
+}
+
+async function checkAuth() {
+  if (!authToken) { showAuthScreen(); return; }
+  try {
+    const res = await fetch(`${API}/auth/profile`, {
+      headers:{'Authorization': `Bearer ${authToken}`}
+    });
+    if (res.ok) {
+      currentUser = await res.json();
+      localStorage.setItem('current_user', JSON.stringify(currentUser));
+      hideAuthScreen(); initApp();
+    } else {
+      authToken = null; localStorage.removeItem('auth_token');
+      showAuthScreen();
+    }
+  } catch (e) { showAuthScreen(); }
+}
+
+checkAuth();
+</script>
+</body>
+</html>
