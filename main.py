@@ -517,7 +517,7 @@ def dashboard(rm_id: int = Depends(get_rm_id)):
     exp_limits = db.execute("""SELECT customer_name,account_number,limit_expiry_date,sanctioned_limit
         FROM customers WHERE rm_id=? AND limit_expiry_date!='' AND limit_expiry_date IS NOT NULL
         AND nature_of_account IN ('ccol','overdraft')
-        AND julianday(limit_expiry_date) - julianday(?) BETWEEN 0 AND 60
+        AND julianday(limit_expiry_date) - julianday(?) <= 60
         ORDER BY limit_expiry_date""", (rm_id, today)).fetchall()
     stock_ins = db.execute("""SELECT customer_name,account_number,'Stock Insurance' as ins_type, stock_ins_expiry as expiry
         FROM customers WHERE rm_id=? AND stock_insurance=1 AND stock_ins_expiry!='' AND stock_ins_expiry IS NOT NULL

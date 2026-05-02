@@ -356,7 +356,7 @@ tr:hover td{background:rgba(30,136,229,.04)}
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" id="dash-alerts-grid">
     <div class="card">
-      <div class="alert-title" style="color:var(--warn)">⚠️ Limits Expiring (60 days)</div>
+      <div class="alert-title" style="color:var(--warn)">⚠️ Limits Expiring / Expired (60 days)</div>
       <div class="alert-list" id="dash-exp-limits"></div>
     </div>
     <div class="card">
@@ -1111,16 +1111,18 @@ async function loadDashboard() {
   }
   const limEl = document.getElementById('dash-exp-limits');
   if (!d.expiring_limits.length) {
-    limEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:1.5rem">✅</div><div class="empty-text">No limits expiring in 60 days</div></div>';
+    limEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:1.5rem">✅</div><div class="empty-text">No limits expiring or expired</div></div>';
   } else {
     limEl.innerHTML = d.expiring_limits.map(r => {
       const dl = daysLeft(r.limit_expiry_date);
-      const cls = dl<=15?'danger':'warn';
+      const expired = dl < 0;
+      const cls = (expired || dl<=15) ? 'danger' : 'warn';
+      const label = expired ? `${Math.abs(dl)}d overdue` : `${dl}d left`;
       return `<div class="alert-item ${cls}">
         <div class="alert-dot" style="background:var(--${cls})"></div>
         <div class="alert-info"><div class="alert-name">${r.customer_name}</div>
         <div class="alert-detail">${r.account_number||''} · ${fmtCr(r.sanctioned_limit)}</div></div>
-        <div class="alert-date">${fmtDate(r.limit_expiry_date)}<br><span style="font-size:.65rem">${dl}d left</span></div></div>`;
+        <div class="alert-date">${fmtDate(r.limit_expiry_date)}<br><span style="font-size:.65rem">${label}</span></div></div>`;
     }).join('');
   }
   const insEl = document.getElementById('dash-exp-ins');
